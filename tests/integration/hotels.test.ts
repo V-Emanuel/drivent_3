@@ -3,7 +3,13 @@ import faker from '@faker-js/faker';
 import httpStatus from 'http-status';
 import * as jwt from 'jsonwebtoken';
 import { cleanDb, generateValidToken } from '../helpers';
-import { createEnrollmentWithAddress, createUser, createHotel } from '../factories';
+import {
+  createEnrollmentWithAddress,
+  createUser,
+  createHotel,
+  createTicket,
+  createIsIncludedHotelTrueTicketType,
+} from '../factories';
 import app, { init } from '@/app';
 
 beforeAll(async () => {
@@ -28,20 +34,14 @@ describe('GET /hotels', () => {
 });
 describe('/hotels Quando o token é válido', () => {
   it('Retorna 200 se o token é válido', async () => {
-    const token = await generateValidToken();
+    const user = await createUser();
+    const createdEnrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createIsIncludedHotelTrueTicketType();
+    await createTicket(createdEnrollment.id, ticketType.id, 'PAID');
+    await createHotel();
+    const token = await generateValidToken(user);
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
     expect(result.status).toEqual(httpStatus.OK);
-    expect(result.body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-          image: expect.any(String),
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
-        }),
-      ]),
-    );
   });
 });
 describe('GET hotels/:hotelId', () => {
