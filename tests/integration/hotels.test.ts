@@ -1,6 +1,7 @@
 import supertest from 'supertest';
 import faker from '@faker-js/faker';
 import httpStatus from 'http-status';
+import * as jwt from 'jsonwebtoken';
 import { cleanDb, generateValidToken } from '../helpers';
 import { createEnrollmentWithAddress, createUser, createTicketType, createTicket } from '../factories';
 import app, { init } from '@/app';
@@ -15,14 +16,21 @@ beforeEach(async () => {
 const server = supertest(app);
 
 describe('GET /hotels', () => {
-  it('Retorna 200 se o teken é válido', async () => {
-    const token = await generateValidToken();
+  it('Retorna 401 se o token passado está incorreto', async () => {
+    const token = faker.lorem.word();
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-    expect(result.status).toBe(200);
+    expect(result.status).toBe(httpStatus.UNAUTHORIZED);
   });
-  it('Retorna 200 se o objeto está com o formato correto', async () => {
+  it('Retorna 401 se não foi passado token', async () => {
+    const result = await server.get('/hotels');
+    expect(result.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+});
+describe('Quando o token é válido', () => {
+  it('Retorna 200 se o token é válido', async () => {
     const token = await generateValidToken();
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+    expect(result.status).toEqual(httpStatus.OK);
     expect(result.body).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -35,12 +43,11 @@ describe('GET /hotels', () => {
       ]),
     );
   });
-  it('Retorna 404 se o array de hotéis está vázio', async () => {
+  it('Retorna um array vazio quando não há hotéis', async () => {
     const user = await createUser();
     const token = await generateValidToken(user);
-    await createEnrollmentWithAddress(user);
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-    expect(result.status).toEqual(httpStatus.NOT_FOUND);
+    expect(result.body).toEqual([]);
   });
 });
 
