@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from '@/middlewares';
 import hotelsService from '@/services/hotels-service';
 
 export async function getHotels(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<Response> {
-  const { userId } = req;
+  const userId = req.userId as number;
   try {
     const hotels = await hotelsService.getHotel(userId);
     return res.status(httpStatus.OK).send(hotels);

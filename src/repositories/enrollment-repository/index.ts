@@ -32,7 +32,7 @@ async function findById(enrollmentId: number) {
 
 async function findUserById(userId: number) {
   return prisma.enrollment.findFirst({
-    where: { userId: userId },
+    where: { userId },
   });
 }
 

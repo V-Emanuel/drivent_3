@@ -3,7 +3,7 @@ import httpStatus from 'http-status';
 import hotelsRepository from '@/repositories/hotels-repository';
 import ticketsRepository from '@/repositories/tickets-repository';
 import enrollmentRepository from '@/repositories/enrollment-repository';
-import { notFoundError } from '@/errors';
+import { notFoundError, paymentRequiredError } from '@/errors';
 
 async function getHotel(userId: number): Promise<Hotel[]> {
   const hotels: Hotel[] = await hotelsRepository.findHotels();
@@ -15,10 +15,12 @@ async function getHotel(userId: number): Promise<Hotel[]> {
   const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
   if (!ticket) throw notFoundError();
 
-  if (ticket.TicketType.isRemote == true) throw httpStatus.PAYMENT_REQUIRED;
-  if (ticket.TicketType.includesHotel == false) throw httpStatus.PAYMENT_REQUIRED;
-  if (ticket.status != 'PAID') throw httpStatus.PAYMENT_REQUIRED;
+  const ticketType = await ticketsRepository.findTicketTypeById(ticket.ticketTypeId);
 
+  if (!enrollment || !ticket || !hotels) throw notFoundError();
+  if (ticket.status !== 'PAID' || ticketType.includesHotel !== true || ticketType.isRemote === true) {
+    throw paymentRequiredError();
+  }
   return hotels;
 }
 

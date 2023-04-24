@@ -74,10 +74,11 @@ describe('validações de ticketda rota /hotels', () => {
     const createdEnrollment = await createEnrollmentWithAddress(user);
     const ticketType = await createHotelTicketTypeTrue();
     await createTicket(createdEnrollment.id, ticketType.id, 'RESERVED');
+    await createHotel();
 
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    expect(result.status).toEqual(httpStatus.PAYMENT_REQUIRED);
+    expect(result.status).toBe(httpStatus.PAYMENT_REQUIRED);
   });
   it('Retorna 402 se o tipo do ticket for remoto', async () => {
     const user = await createUser();
@@ -85,10 +86,10 @@ describe('validações de ticketda rota /hotels', () => {
     const createdEnrollment = await createEnrollmentWithAddress(user);
     const ticketType = await createRemotTicketTypeTrue();
     await createTicket(createdEnrollment.id, ticketType.id, 'PAID');
-
+    await createHotel();
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    expect(result.status).toEqual(httpStatus.PAYMENT_REQUIRED);
+    expect(result.status).toBe(httpStatus.PAYMENT_REQUIRED);
   });
   it('Retorna 402 se o tipo do ticket não inclui hotel', async () => {
     const user = await createUser();
@@ -96,9 +97,9 @@ describe('validações de ticketda rota /hotels', () => {
     const createdEnrollment = await createEnrollmentWithAddress(user);
     const ticketType = await createHotelTicketTypeFalse();
     await createTicket(createdEnrollment.id, ticketType.id, 'PAID');
-
+    await createHotel();
     const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    expect(result.status).toEqual(httpStatus.PAYMENT_REQUIRED);
+    expect(result.status).toBe(httpStatus.PAYMENT_REQUIRED);
   });
 });
