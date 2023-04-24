@@ -1,6 +1,8 @@
 import supertest from 'supertest';
 import faker from '@faker-js/faker';
+import httpStatus from 'http-status';
 import { cleanDb, generateValidToken } from '../helpers';
+import { createEnrollmentWithAddress, createUser, createTicketType, createTicket } from '../factories';
 import app, { init } from '@/app';
 
 beforeAll(async () => {
@@ -32,6 +34,13 @@ describe('GET /hotels', () => {
         }),
       ]),
     );
+  });
+  it('Retorna 404 se o array de hotéis está vázio', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    await createEnrollmentWithAddress(user);
+    const result = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+    expect(result.status).toEqual(httpStatus.NOT_FOUND);
   });
 });
 
